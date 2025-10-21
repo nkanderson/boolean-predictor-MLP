@@ -1,6 +1,7 @@
 #ifndef MLP_H
 #define MLP_H
 
+#include <ostream>
 #include <vector>
 
 namespace mlp {
@@ -32,6 +33,11 @@ public:
    * @brief Destroy the MLP object
    */
   ~MLP();
+
+  /**
+   * @brief Stream insertion operator for printing MLP
+   */
+  friend std::ostream &operator<<(std::ostream &os, const MLP &mlp);
 
 private:
   unsigned int input_size_;
