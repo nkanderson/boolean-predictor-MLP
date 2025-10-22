@@ -21,6 +21,9 @@ build/
 bin/
 lib/
 
+# Generated weight files
+mlp_*.txt
+
 # Editor and IDE files
 .vscode/
 .idea/

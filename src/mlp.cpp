@@ -1,5 +1,6 @@
 #include "mlp.h"
 #include <cmath>
+#include <fstream>
 #include <random>
 #include <stdexcept>
 
@@ -200,6 +201,44 @@ void MLP::train(const std::vector<std::vector<float>> &training_inputs,
       }
     }
   }
+}
+
+void MLP::save_weights() const {
+  // Generate filename
+  std::string filename = "mlp_" + std::to_string(input_size_) + "_" +
+                         std::to_string(hidden_layer_size_) + ".txt";
+
+  // Open file for writing
+  std::ofstream file(filename);
+  if (!file.is_open()) {
+    throw std::runtime_error("Failed to open file for writing: " + filename);
+  }
+
+  // Write hidden layer weights and biases
+  // Each hidden neuron gets its weights and bias on separate lines
+  for (size_t i = 0; i < hidden_layer_size_; ++i) {
+    // Write weights for this hidden neuron
+    for (size_t j = 0; j < input_size_; ++j) {
+      file << hidden_weights_[i][j];
+      if (j < input_size_ - 1) {
+        file << " ";
+      }
+    }
+    // Write bias on the same line
+    file << " " << hidden_weights_[i][input_size_] << "\n";
+  }
+
+  // Write output layer weights and bias on one line
+  for (size_t i = 0; i < hidden_layer_size_; ++i) {
+    file << output_weights_[i];
+    if (i < hidden_layer_size_ - 1) {
+      file << " ";
+    }
+  }
+  // Write output bias
+  file << " " << output_weights_[hidden_layer_size_] << "\n";
+
+  file.close();
 }
 
 std::ostream &operator<<(std::ostream &os, const MLP &mlp) {

@@ -92,6 +92,11 @@ int main() {
               << "] -> " << output << " (target: " << xor_targets[i] << ")"
               << std::endl;
   }
+
+  // Save the trained weights
+  std::cout << "  Saving weights to file..." << std::endl;
+  xor_network.save_weights();
+  std::cout << "  Weights saved to mlp_2_4.txt" << std::endl;
   std::cout << std::endl;
 
   std::cout << "=== All examples completed successfully ===" << std::endl;

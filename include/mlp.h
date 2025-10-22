@@ -56,6 +56,14 @@ public:
              float learning_rate = 0.1f);
 
   /**
+   * @brief Save weights and biases to a file
+   *
+   * Saves to a file named mlp_<input_size>_<hidden_size>.txt
+   * Format: Each line contains weights followed by bias for one neuron/layer
+   */
+  void save_weights() const;
+
+  /**
    * @brief Stream insertion operator for printing MLP
    */
   friend std::ostream &operator<<(std::ostream &os, const MLP &mlp);
