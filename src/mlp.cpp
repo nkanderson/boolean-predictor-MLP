@@ -4,39 +4,72 @@
 
 namespace mlp {
 
+std::vector<float> MLP::generate_random_weights(size_t size) {
+  std::random_device rd;  // True random seed
+  std::mt19937 gen(rd()); // Fast PRNG (Mersenne Twister)
+  std::uniform_real_distribution<float> dist(-1.0f, 1.0f); // Range: [-1.0, 1.0]
+
+  std::vector<float> weights(size);
+  for (size_t i = 0; i < size; ++i) {
+    weights[i] = dist(gen);
+  }
+  return weights;
+}
+
 MLP::MLP(unsigned int input_size, unsigned int hidden_layer_size,
-         const std::vector<float> &input_weights,
-         const std::vector<std::vector<float>> &hidden_weights)
+         const std::vector<std::vector<float>> &hidden_weights,
+         const std::vector<float> &output_weights)
     : input_size_(input_size), hidden_layer_size_(hidden_layer_size),
-      input_weights_(input_weights), hidden_weights_(hidden_weights) {
+      hidden_weights_(hidden_weights), output_weights_(output_weights) {
 
-  // Initialize or validate input_weights
-  // Expected size: input_size + 1 (for bias)
-  const size_t expected_input_weights_size = input_size_ + 1;
+  // Initialize or validate hidden_weights (Input→Hidden)
+  // Expected: hidden_layer_size vectors, each with input_size + 1 (for bias)
+  // elements
+  const size_t expected_weights_per_hidden_neuron = input_size_ + 1;
 
-  if (input_weights_.empty()) {
-    // Initialize with random weights
-    std::random_device rd;  // True random seed using hardware entropy
-    std::mt19937 gen(rd()); // Fast PRNG (Mersenne Twister)
-    std::uniform_real_distribution<float> dist(-1.0f,
-                                               1.0f); // Range: [-1.0, 1.0]
-
-    input_weights_.resize(expected_input_weights_size);
-    for (size_t i = 0; i < expected_input_weights_size; ++i) {
-      input_weights_[i] = dist(gen); // Generate random weight
+  if (hidden_weights_.empty()) {
+    // Initialize with random weights for each hidden neuron
+    hidden_weights_.resize(hidden_layer_size_);
+    for (size_t i = 0; i < hidden_layer_size_; ++i) {
+      hidden_weights_[i] =
+          generate_random_weights(expected_weights_per_hidden_neuron);
     }
   } else {
-    // Validate size
-    if (input_weights_.size() != expected_input_weights_size) {
-      throw std::invalid_argument("input_weights size mismatch: expected " +
-                                  std::to_string(expected_input_weights_size) +
-                                  " but got " +
-                                  std::to_string(input_weights_.size()));
+    // Validate structure
+    if (hidden_weights_.size() != hidden_layer_size_) {
+      throw std::invalid_argument("hidden_weights size mismatch: expected " +
+                                  std::to_string(hidden_layer_size_) +
+                                  " neurons but got " +
+                                  std::to_string(hidden_weights_.size()));
+    }
+    // Validate each neuron's weights
+    for (size_t i = 0; i < hidden_weights_.size(); ++i) {
+      if (hidden_weights_[i].size() != expected_weights_per_hidden_neuron) {
+        throw std::invalid_argument(
+            "hidden_weights[" + std::to_string(i) +
+            "] size mismatch: expected " +
+            std::to_string(expected_weights_per_hidden_neuron) + " but got " +
+            std::to_string(hidden_weights_[i].size()));
+      }
     }
   }
 
-  // TODO: Initialize random weights and biases if hidden_weights is empty
-  // TODO: Validate hidden_weights structure matches expected dimensions
+  // Initialize or validate output_weights (Hidden→Output)
+  // Expected size: hidden_layer_size + 1 (for bias)
+  const size_t expected_output_weights_size = hidden_layer_size_ + 1;
+
+  if (output_weights_.empty()) {
+    // Initialize with random weights
+    output_weights_ = generate_random_weights(expected_output_weights_size);
+  } else {
+    // Validate size
+    if (output_weights_.size() != expected_output_weights_size) {
+      throw std::invalid_argument("output_weights size mismatch: expected " +
+                                  std::to_string(expected_output_weights_size) +
+                                  " but got " +
+                                  std::to_string(output_weights_.size()));
+    }
+  }
 }
 
 MLP::~MLP() {
@@ -48,18 +81,8 @@ std::ostream &operator<<(std::ostream &os, const MLP &mlp) {
   os << "  input_size: " << mlp.input_size_ << "\n";
   os << "  hidden_layer_size: " << mlp.hidden_layer_size_ << "\n";
 
-  // Print input weights
-  os << "  input_weights: [";
-  for (size_t i = 0; i < mlp.input_weights_.size(); ++i) {
-    os << mlp.input_weights_[i];
-    if (i < mlp.input_weights_.size() - 1) {
-      os << ", ";
-    }
-  }
-  os << "]\n";
-
-  // Print hidden weights
-  os << "  hidden_weights: [\n";
+  // Print hidden weights (Input→Hidden)
+  os << "  hidden_weights (Input→Hidden): [\n";
   for (size_t i = 0; i < mlp.hidden_weights_.size(); ++i) {
     os << "    neuron " << i << ": [";
     for (size_t j = 0; j < mlp.hidden_weights_[i].size(); ++j) {
@@ -75,6 +98,16 @@ std::ostream &operator<<(std::ostream &os, const MLP &mlp) {
     os << "\n";
   }
   os << "  ]\n";
+
+  // Print output weights (Hidden→Output)
+  os << "  output_weights (Hidden→Output): [";
+  for (size_t i = 0; i < mlp.output_weights_.size(); ++i) {
+    os << mlp.output_weights_[i];
+    if (i < mlp.output_weights_.size() - 1) {
+      os << ", ";
+    }
+  }
+  os << "]\n";
   os << ")";
 
   return os;

@@ -23,16 +23,18 @@ int main() {
   // Example 3: Create MLP with predefined weights
   std::cout << "Example 3: MLP with predefined weights" << std::endl;
 
-  // Input layer weights (for 2 inputs + 1 bias = 3 values)
-  std::vector<float> input_weights = {0.5f, -0.3f, 0.1f};
-
-  // Hidden layer weights (2 neurons, each with 2 inputs + 1 bias = 3 values)
+  // Hidden layer weights (Input→Hidden)
+  // 2 hidden neurons, each with 2 input weights + 1 bias = 3 values
   std::vector<std::vector<float>> hidden_weights = {
-      {0.8f, -0.2f, 0.4f}, // Weights for hidden neuron 1
-      {-0.6f, 0.9f, -0.1f} // Weights for hidden neuron 2
+      {0.8f, -0.2f, 0.4f}, // Weights for hidden neuron 0
+      {-0.6f, 0.9f, -0.1f} // Weights for hidden neuron 1
   };
 
-  mlp::MLP network3(2, 2, input_weights, hidden_weights);
+  // Output layer weights (Hidden→Output)
+  // 1 output neuron with 2 hidden inputs + 1 bias = 3 values
+  std::vector<float> output_weights = {0.5f, -0.3f, 0.1f};
+
+  mlp::MLP network3(2, 2, hidden_weights, output_weights);
   std::cout << network3 << std::endl;
   std::cout << std::endl;
 

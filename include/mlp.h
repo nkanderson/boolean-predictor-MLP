@@ -19,15 +19,16 @@ public:
    *
    * @param input_size Number of input neurons
    * @param hidden_layer_size Number of neurons in the hidden layer (default: 2)
-   * @param input_weights Weights and bias for the input layer
-   * @param hidden_weights Weights and biases for the hidden layer.
-   *                       Each inner vector contains weights and bias for one
-   *                       hidden neuron.
+   * @param hidden_weights Weights and biases for the hidden layer
+   * (Input→Hidden). Each inner vector contains weights and bias for one hidden
+   * neuron (input_size + 1 (for bias) elements each).
+   * @param output_weights Weights and bias for the output layer
+   * (Hidden→Output). Single vector with hidden_layer_size + 1 elements.
    */
   explicit MLP(unsigned int input_size, unsigned int hidden_layer_size = 2,
-               const std::vector<float> &input_weights = std::vector<float>(),
                const std::vector<std::vector<float>> &hidden_weights =
-                   std::vector<std::vector<float>>());
+                   std::vector<std::vector<float>>(),
+               const std::vector<float> &output_weights = std::vector<float>());
 
   /**
    * @brief Destroy the MLP object
@@ -40,10 +41,18 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const MLP &mlp);
 
 private:
+  /**
+   * @brief Generate random weights
+   *
+   * @param size Number of weights to generate
+   * @return std::vector<float> Vector of random weights in range [-1.0, 1.0]
+   */
+  static std::vector<float> generate_random_weights(size_t size);
+
   unsigned int input_size_;
   unsigned int hidden_layer_size_;
-  std::vector<float> input_weights_;
-  std::vector<std::vector<float>> hidden_weights_;
+  std::vector<std::vector<float>> hidden_weights_; // Input→Hidden
+  std::vector<float> output_weights_;              // Hidden→Output
 };
 
 } // namespace mlp
