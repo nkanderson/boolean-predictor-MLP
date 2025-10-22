@@ -38,6 +38,30 @@ int main() {
   std::cout << network3 << std::endl;
   std::cout << std::endl;
 
+  // Example 4: Forward propagation
+  std::cout << "Example 4: Forward propagation with network3" << std::endl;
+
+  std::vector<float> test_input1 = {0.0f, 0.0f};
+  float output1 = network3.forward(test_input1);
+  std::cout << "  Input: [" << test_input1[0] << ", " << test_input1[1]
+            << "] -> Output: " << output1 << std::endl;
+
+  std::vector<float> test_input2 = {1.0f, 0.0f};
+  float output2 = network3.forward(test_input2);
+  std::cout << "  Input: [" << test_input2[0] << ", " << test_input2[1]
+            << "] -> Output: " << output2 << std::endl;
+
+  std::vector<float> test_input3 = {0.0f, 1.0f};
+  float output3 = network3.forward(test_input3);
+  std::cout << "  Input: [" << test_input3[0] << ", " << test_input3[1]
+            << "] -> Output: " << output3 << std::endl;
+
+  std::vector<float> test_input4 = {1.0f, 1.0f};
+  float output4 = network3.forward(test_input4);
+  std::cout << "  Input: [" << test_input4[0] << ", " << test_input4[1]
+            << "] -> Output: " << output4 << std::endl;
+  std::cout << std::endl;
+
   std::cout << "=== All examples completed successfully ===" << std::endl;
 
   return 0;

@@ -36,6 +36,14 @@ public:
   ~MLP();
 
   /**
+   * @brief Forward propagation through the network
+   *
+   * @param inputs Input vector (must have size equal to input_size)
+   * @return float Output prediction (sigmoid activated)
+   */
+  float forward(const std::vector<float> &inputs) const;
+
+  /**
    * @brief Stream insertion operator for printing MLP
    */
   friend std::ostream &operator<<(std::ostream &os, const MLP &mlp);
@@ -48,6 +56,14 @@ private:
    * @return std::vector<float> Vector of random weights in range [-1.0, 1.0]
    */
   static std::vector<float> generate_random_weights(size_t size);
+
+  /**
+   * @brief Sigmoid activation function
+   *
+   * @param x Input value
+   * @return float Sigmoid output in range (0, 1)
+   */
+  static float sigmoid(float x);
 
   unsigned int input_size_;
   unsigned int hidden_layer_size_;

@@ -1,4 +1,5 @@
 #include "mlp.h"
+#include <cmath>
 #include <random>
 #include <stdexcept>
 
@@ -15,6 +16,8 @@ std::vector<float> MLP::generate_random_weights(size_t size) {
   }
   return weights;
 }
+
+float MLP::sigmoid(float x) { return 1.0f / (1.0f + std::exp(-x)); }
 
 MLP::MLP(unsigned int input_size, unsigned int hidden_layer_size,
          const std::vector<std::vector<float>> &hidden_weights,
@@ -74,6 +77,47 @@ MLP::MLP(unsigned int input_size, unsigned int hidden_layer_size,
 
 MLP::~MLP() {
   // Cleanup if needed
+}
+
+float MLP::forward(const std::vector<float> &inputs) const {
+  // Validate input size
+  if (inputs.size() != input_size_) {
+    throw std::invalid_argument("Input size mismatch: expected " +
+                                std::to_string(input_size_) + " but got " +
+                                std::to_string(inputs.size()));
+  }
+
+  // Forward propagation through hidden layer
+  std::vector<float> hidden_outputs(hidden_layer_size_);
+  for (size_t i = 0; i < hidden_layer_size_; ++i) {
+    // Compute weighted sum (MAC operation) for hidden neuron i
+    float sum = 0.0f;
+
+    // Add weighted inputs
+    for (size_t j = 0; j < input_size_; ++j) {
+      sum += inputs[j] * hidden_weights_[i][j];
+    }
+
+    // Add bias (last element in weights vector)
+    sum += hidden_weights_[i][input_size_];
+
+    // Apply activation function
+    hidden_outputs[i] = sigmoid(sum);
+  }
+
+  // Forward propagation through output layer
+  float output_sum = 0.0f;
+
+  // Add weighted hidden outputs
+  for (size_t i = 0; i < hidden_layer_size_; ++i) {
+    output_sum += hidden_outputs[i] * output_weights_[i];
+  }
+
+  // Add bias (last element in output_weights)
+  output_sum += output_weights_[hidden_layer_size_];
+
+  // Apply activation function and return
+  return sigmoid(output_sum);
 }
 
 std::ostream &operator<<(std::ostream &os, const MLP &mlp) {
