@@ -19,6 +19,11 @@ std::vector<float> MLP::generate_random_weights(size_t size) {
 
 float MLP::sigmoid(float x) { return 1.0f / (1.0f + std::exp(-x)); }
 
+float MLP::sigmoid_derivative(float sigmoid_output) {
+  // Derivative of sigmoid: f'(x) = f(x) * (1 - f(x))
+  return sigmoid_output * (1.0f - sigmoid_output);
+}
+
 MLP::MLP(unsigned int input_size, unsigned int hidden_layer_size,
          const std::vector<std::vector<float>> &hidden_weights,
          const std::vector<float> &output_weights)
@@ -118,6 +123,83 @@ float MLP::forward(const std::vector<float> &inputs) const {
 
   // Apply activation function and return
   return sigmoid(output_sum);
+}
+
+void MLP::train(const std::vector<std::vector<float>> &training_inputs,
+                const std::vector<float> &training_targets, unsigned int epochs,
+                float learning_rate) {
+  // Validate training data
+  if (training_inputs.empty() || training_targets.empty()) {
+    throw std::invalid_argument("Training data cannot be empty");
+  }
+  if (training_inputs.size() != training_targets.size()) {
+    throw std::invalid_argument(
+        "Number of training inputs must match number of targets");
+  }
+
+  // Training loop
+  for (unsigned int epoch = 0; epoch < epochs; ++epoch) {
+    // Iterate through each training sample
+    for (size_t sample = 0; sample < training_inputs.size(); ++sample) {
+      const std::vector<float> &inputs = training_inputs[sample];
+      float target = training_targets[sample];
+
+      // Validate input size
+      if (inputs.size() != input_size_) {
+        throw std::invalid_argument("Training input size mismatch at sample " +
+                                    std::to_string(sample));
+      }
+
+      // === Forward Pass ===
+      // Compute hidden layer outputs, same as in forward method
+      std::vector<float> hidden_outputs(hidden_layer_size_);
+      for (size_t i = 0; i < hidden_layer_size_; ++i) {
+        float sum = 0.0f;
+        for (size_t j = 0; j < input_size_; ++j) {
+          sum += inputs[j] * hidden_weights_[i][j];
+        }
+        sum += hidden_weights_[i][input_size_]; // Add bias
+        hidden_outputs[i] = sigmoid(sum);
+      }
+
+      // Compute output
+      float output_sum = 0.0f;
+      for (size_t i = 0; i < hidden_layer_size_; ++i) {
+        output_sum += hidden_outputs[i] * output_weights_[i];
+      }
+      output_sum += output_weights_[hidden_layer_size_]; // Add bias
+      float output = sigmoid(output_sum);
+
+      // === Backward Pass ===
+      // Compute output layer error
+      float output_error = target - output;
+      float output_delta = output_error * sigmoid_derivative(output);
+
+      // Compute hidden layer errors
+      std::vector<float> hidden_deltas(hidden_layer_size_);
+      for (size_t i = 0; i < hidden_layer_size_; ++i) {
+        float error = output_delta * output_weights_[i];
+        hidden_deltas[i] = error * sigmoid_derivative(hidden_outputs[i]);
+      }
+
+      // === Update Weights ===
+      // Update output weights
+      for (size_t i = 0; i < hidden_layer_size_; ++i) {
+        output_weights_[i] += learning_rate * output_delta * hidden_outputs[i];
+      }
+      output_weights_[hidden_layer_size_] +=
+          learning_rate * output_delta; // Update bias
+
+      // Update hidden weights
+      for (size_t i = 0; i < hidden_layer_size_; ++i) {
+        for (size_t j = 0; j < input_size_; ++j) {
+          hidden_weights_[i][j] += learning_rate * hidden_deltas[i] * inputs[j];
+        }
+        hidden_weights_[i][input_size_] +=
+            learning_rate * hidden_deltas[i]; // Update bias
+      }
+    }
+  }
 }
 
 std::ostream &operator<<(std::ostream &os, const MLP &mlp) {

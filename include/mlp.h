@@ -44,6 +44,18 @@ public:
   float forward(const std::vector<float> &inputs) const;
 
   /**
+   * @brief Train the network using backpropagation
+   *
+   * @param training_inputs Vector of training input samples
+   * @param training_targets Vector of target outputs (one per sample)
+   * @param epochs Number of training iterations
+   * @param learning_rate Learning rate for weight updates (default: 0.1)
+   */
+  void train(const std::vector<std::vector<float>> &training_inputs,
+             const std::vector<float> &training_targets, unsigned int epochs,
+             float learning_rate = 0.1f);
+
+  /**
    * @brief Stream insertion operator for printing MLP
    */
   friend std::ostream &operator<<(std::ostream &os, const MLP &mlp);
@@ -64,6 +76,14 @@ private:
    * @return float Sigmoid output in range (0, 1)
    */
   static float sigmoid(float x);
+
+  /**
+   * @brief Derivative of sigmoid function
+   *
+   * @param sigmoid_output Output of sigmoid function
+   * @return float Derivative value
+   */
+  static float sigmoid_derivative(float sigmoid_output);
 
   unsigned int input_size_;
   unsigned int hidden_layer_size_;
