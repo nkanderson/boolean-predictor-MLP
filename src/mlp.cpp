@@ -172,11 +172,18 @@ void MLP::train(const std::vector<std::vector<float>> &training_inputs,
       float output = sigmoid(output_sum);
 
       // === Backward Pass ===
+      // See Nielsen, "Neural Networks and Deep Learning" (2019), Chapter 2
+      // http://neuralnetworksanddeeplearning.com/chap2.html
+      //
       // Compute output layer error
-      float output_error = target - output;
-      float output_delta = output_error * sigmoid_derivative(output);
+      // Assumes a quadratic cost function: C = 1/2 * (target - output)^2
+      // dC/doutput = output - target
+      // See equations BP1 and 30 in Nielsen (2019)
+      float output_cost = output - target;
+      float output_delta = output_cost * sigmoid_derivative(output);
 
       // Compute hidden layer errors
+      // See equation BP2 in Nielsen (2019)
       std::vector<float> hidden_deltas(hidden_layer_size_);
       for (size_t i = 0; i < hidden_layer_size_; ++i) {
         float error = output_delta * output_weights_[i];
@@ -184,19 +191,29 @@ void MLP::train(const std::vector<std::vector<float>> &training_inputs,
       }
 
       // === Update Weights ===
+      // See Nielsen, "Neural Networks and Deep Learning" (2019), Chapters 1 & 2
+      // http://neuralnetworksanddeeplearning.com/chap1.html
+      // http://neuralnetworksanddeeplearning.com/chap2.html
+      // In Chapter 2, Equation BP4 shows how to calcaulate change in cost with
+      // respect to an individual weight.
+      // Applying this equation to Equations 16 & 17 in Chapter 1 gives the
+      // weight and bias update equations below, where each weight or bias is
+      // moved in the direction which will reduce the overall cost.
+      //
       // Update output weights
       for (size_t i = 0; i < hidden_layer_size_; ++i) {
-        output_weights_[i] += learning_rate * output_delta * hidden_outputs[i];
+        output_weights_[i] -= learning_rate * output_delta * hidden_outputs[i];
       }
-      output_weights_[hidden_layer_size_] +=
+      // See equation BP3 in Nielsen (2019)
+      output_weights_[hidden_layer_size_] -=
           learning_rate * output_delta; // Update bias
 
       // Update hidden weights
       for (size_t i = 0; i < hidden_layer_size_; ++i) {
         for (size_t j = 0; j < input_size_; ++j) {
-          hidden_weights_[i][j] += learning_rate * hidden_deltas[i] * inputs[j];
+          hidden_weights_[i][j] -= learning_rate * hidden_deltas[i] * inputs[j];
         }
-        hidden_weights_[i][input_size_] +=
+        hidden_weights_[i][input_size_] -=
             learning_rate * hidden_deltas[i]; // Update bias
       }
     }
