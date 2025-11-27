@@ -23,6 +23,10 @@ OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
 EXAMPLE_SRC = example.cpp
 EXAMPLE_BIN = $(BIN_DIR)/example
 
+# Branch predictor trainer executable
+TRAIN_BP_SRC = train_branch_predictor.cpp
+TRAIN_BP_BIN = $(BIN_DIR)/train_bp
+
 # Default target
 .PHONY: all
 all: directories static
@@ -58,6 +62,12 @@ run-example: example
 	@echo "Running example..."
 	@$(EXAMPLE_BIN)
 
+# Build branch predictor trainer executable
+.PHONY: train_bp
+train_bp: directories static
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE_DIR) $(TRAIN_BP_SRC) -L$(LIB_DIR) -l$(LIB_NAME) -o $(TRAIN_BP_BIN)
+	@echo "Trainer executable created: $(TRAIN_BP_BIN)"
+
 # Debug build
 .PHONY: debug
 debug: CXXFLAGS += $(DEBUG_FLAGS)
@@ -77,6 +87,7 @@ help:
 	@echo "  static      - Build static library"
 	@echo "  example     - Build example executable"
 	@echo "  run-example - Build and run the example"
+	@echo "  train_bp    - Build branch predictor trainer"
 	@echo "  debug       - Build with debug symbols"
 	@echo "  clean       - Remove build artifacts"
 	@echo "  help        - Show this help message"
