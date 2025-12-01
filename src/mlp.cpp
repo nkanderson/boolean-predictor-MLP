@@ -220,6 +220,53 @@ void MLP::train(const std::vector<std::vector<float>> &training_inputs,
   }
 }
 
+float MLP::compute_loss(const std::vector<std::vector<float>> &inputs,
+                        const std::vector<float> &targets) const {
+  // Validate input
+  if (inputs.empty() || targets.empty()) {
+    throw std::invalid_argument("Input and target vectors cannot be empty");
+  }
+  if (inputs.size() != targets.size()) {
+    throw std::invalid_argument(
+        "Number of inputs must match number of targets");
+  }
+
+  // Compute mean squared error
+  float total_error = 0.0f;
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    float output = forward(inputs[i]);
+    float error = targets[i] - output;
+    total_error += error * error;
+  }
+
+  return total_error / static_cast<float>(inputs.size());
+}
+
+float MLP::compute_accuracy(const std::vector<std::vector<float>> &inputs,
+                            const std::vector<float> &targets) const {
+  // Validate input
+  if (inputs.empty() || targets.empty()) {
+    throw std::invalid_argument("Input and target vectors cannot be empty");
+  }
+  if (inputs.size() != targets.size()) {
+    throw std::invalid_argument(
+        "Number of inputs must match number of targets");
+  }
+
+  // Count correct predictions
+  size_t correct = 0;
+  for (size_t i = 0; i < inputs.size(); ++i) {
+    float output = forward(inputs[i]);
+    // Use 0.5 threshold for binary classification
+    float prediction = (output >= 0.5f) ? 1.0f : 0.0f;
+    if (prediction == targets[i]) {
+      ++correct;
+    }
+  }
+
+  return static_cast<float>(correct) / static_cast<float>(inputs.size());
+}
+
 void MLP::save_weights() const {
   // Generate filename
   std::string filename = "mlp_" + std::to_string(input_size_) + "_" +

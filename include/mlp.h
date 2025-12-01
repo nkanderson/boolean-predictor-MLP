@@ -56,6 +56,28 @@ public:
              float learning_rate = 0.1f);
 
   /**
+   * @brief Compute mean squared error loss on a dataset
+   *
+   * @param inputs Vector of input samples
+   * @param targets Vector of target outputs (one per sample)
+   * @return float Mean squared error across all samples
+   */
+  float compute_loss(const std::vector<std::vector<float>> &inputs,
+                     const std::vector<float> &targets) const;
+
+  /**
+   * @brief Compute classification accuracy on a dataset
+   *
+   * Uses 0.5 threshold to convert predictions to binary labels.
+   *
+   * @param inputs Vector of input samples
+   * @param targets Vector of target outputs (one per sample)
+   * @return float Accuracy as fraction in [0, 1]
+   */
+  float compute_accuracy(const std::vector<std::vector<float>> &inputs,
+                         const std::vector<float> &targets) const;
+
+  /**
    * @brief Save weights and biases to a file
    *
    * Saves to a file named mlp_<input_size>_<hidden_size>.txt

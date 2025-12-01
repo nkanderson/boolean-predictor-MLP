@@ -45,6 +45,7 @@ std::pair<float, std::vector<float>> parse_csv_line(const std::string &line,
  * @brief Train MLP on CSV data in streaming/chunked fashion
  *
  * Reads CSV file in batches to avoid loading entire dataset into memory.
+ * Tracks and reports loss during training for convergence monitoring.
  *
  * @param network MLP network to train
  * @param filename Path to CSV file
@@ -52,12 +53,19 @@ std::pair<float, std::vector<float>> parse_csv_line(const std::string &line,
  * @param epochs Number of passes through the dataset
  * @param learning_rate Learning rate for gradient descent
  * @param batch_size Number of samples per training batch
+ * @param loss_report_frequency Report loss every N epochs (0 = no reporting)
  * @return size_t Total number of samples processed
  */
 size_t train_streaming(mlp::MLP &network, const std::string &filename,
                        unsigned int input_size, unsigned int epochs,
-                       float learning_rate, size_t batch_size) {
+                       float learning_rate, size_t batch_size,
+                       unsigned int loss_report_frequency = 10) {
   size_t total_samples = 0;
+  std::vector<std::vector<float>> all_inputs;
+  std::vector<float> all_targets;
+
+  // Flag to track if we've loaded data for loss computation
+  bool data_loaded_for_loss = false;
 
   for (unsigned int epoch = 0; epoch < epochs; ++epoch) {
     std::ifstream file(filename);
@@ -89,6 +97,12 @@ size_t train_streaming(mlp::MLP &network, const std::string &filename,
         batch_inputs.push_back(inputs);
         ++epoch_samples;
 
+        // Store data for loss computation (first epoch only)
+        if (epoch == 0 && loss_report_frequency > 0 && !data_loaded_for_loss) {
+          all_inputs.push_back(inputs);
+          all_targets.push_back(target);
+        }
+
         // Train when batch is full
         if (batch_inputs.size() >= batch_size) {
           network.train(batch_inputs, batch_targets, 1, learning_rate);
@@ -110,14 +124,24 @@ size_t train_streaming(mlp::MLP &network, const std::string &filename,
 
     file.close();
 
-    // Report progress
+    // Mark that we've loaded all data
     if (epoch == 0) {
       total_samples = epoch_samples;
-      std::cout << "Epoch 1/" << epochs << " - " << epoch_samples
-                << " samples processed" << std::endl;
-    } else if ((epoch + 1) % std::max(1u, epochs / 10) == 0 ||
-               epoch == epochs - 1) {
-      std::cout << "Epoch " << (epoch + 1) << "/" << epochs << std::endl;
+      data_loaded_for_loss = true;
+    }
+
+    // Compute and report loss and accuracy
+    bool should_report =
+        (loss_report_frequency > 0) &&
+        ((epoch % loss_report_frequency == 0) || (epoch == epochs - 1));
+
+    if (should_report) {
+      float loss = network.compute_loss(all_inputs, all_targets);
+      float accuracy = network.compute_accuracy(all_inputs, all_targets);
+      std::cout << "Epoch " << (epoch + 1) << "/" << epochs
+                << " - Loss: " << loss 
+                << " - Accuracy: " << (accuracy * 100.0f) << "%"
+                << std::endl;
     }
   }
 
@@ -186,8 +210,12 @@ int main(int argc, char *argv[]) {
               << std::endl;
     std::cout << "\nStarting training...\n";
 
-    size_t total_samples = train_streaming(network, csv_file, input_size,
-                                           epochs, learning_rate, batch_size);
+    // Report loss every 10 epochs or at least 10 times total
+    unsigned int loss_report_freq = std::max(1u, epochs / 10);
+
+    size_t total_samples =
+        train_streaming(network, csv_file, input_size, epochs, learning_rate,
+                        batch_size, loss_report_freq);
 
     std::cout << "\nTraining complete!" << std::endl;
     std::cout << "Total samples per epoch: " << total_samples << std::endl;
